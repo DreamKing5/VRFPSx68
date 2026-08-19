@@ -1,0 +1,26 @@
+using UnityEngine;
+
+public class EnemyController : MonoBehaviour
+{
+    //PlayerStatusを取得
+    [SerializeField] private PlayerStatus enemy=new PlayerStatus();
+    
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.P))
+        {
+            enemy.TakeDamage(100000);
+        }
+        if(enemy.CurrentHp == 0)
+        {
+            Destroy(gameObject);
+        }
+    }
+}
