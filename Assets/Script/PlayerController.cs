@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
             status.Turbo();
         }else
         {
-            moveSpeed=5f;
+            moveSpeed=8f;
         }
 
         forward.y=0f;

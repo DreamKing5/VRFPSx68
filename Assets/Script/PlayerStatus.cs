@@ -34,12 +34,9 @@ public class PlayerStatus
     {
         int finalDamage =Mathf.CeilToInt(damage*basicGuard/Guard);
         currentHp=Mathf.Clamp(currentHp-finalDamage,0,maxHp);
+        Debug.Log($"残りHP:{currentHp}");
     }
 
-    public void DealDamage(int damage)
-    {
-        
-    }
     
     public void Jump(int jumpCount)
     {
