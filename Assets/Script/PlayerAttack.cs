@@ -78,6 +78,12 @@ public class PlayerAttack : MonoBehaviour
             }
             enemy.TakeDamage(attackDamage);
             Debug.Log($"敵に{attackDamage}のダメージを与えました。");
+            Vector3 knockbackDirection = (enemy.transform.position -this.transform.position);
+            //PlayerController playerController = GetComponent<PlayerController>();
+            //playerController.ApplyKnockback(30,knockbackDirection);
+            //GetComponent<PlayerController>().ApplyKnockback(30,knockbackDirection);
+            FindObjectOfType<PlayerController>().ApplyKnockback(attackDamage,knockbackDirection);
+            Debug.Log("敵に30のノックバックを適用しました。");
         }
     }
 

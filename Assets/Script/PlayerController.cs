@@ -12,7 +12,13 @@ public class PlayerController : MonoBehaviour
     private float cameraPitch;
     //ここまで移動・ジャンプの基礎動作
 
-
+    [Header("ノックバック")]
+    [SerializeField] private float knockbackCoefficient=0.01f;
+    private float knockbackDuration=2.0f;
+    private float upwardRatio=0.2f;
+    private Vector3 knockbackVelocity;
+    private float knockbackTimeRemaining;
+    private float knockbackDeceleration;
     
 
     //プレイヤーステータスの設定
@@ -32,7 +38,49 @@ public class PlayerController : MonoBehaviour
         Look();
     }
 
-    private void Move()//WASD移動
+    //ノックバック処理
+    public void ApplyKnockback(int knockbackPower,Vector3 direction)
+    {
+        if(direction.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+        direction.Normalize();
+        direction.y+=upwardRatio;
+        direction.Normalize();
+        knockbackVelocity=direction*knockbackPower*knockbackCoefficient;
+        knockbackTimeRemaining=knockbackDuration;
+
+        if(knockbackDuration > 0f)
+        {
+            knockbackDeceleration=knockbackVelocity.magnitude/knockbackDuration;
+        }
+        else
+        {
+            knockbackVelocity=Vector3.zero;
+            knockbackDeceleration=0f;
+        }
+    }
+    private void Updateknockback()
+    {
+        if(knockbackTimeRemaining <= 0f)
+        {
+            knockbackVelocity=Vector3.zero;
+            return;
+        }
+        knockbackTimeRemaining-=Time.deltaTime;
+        knockbackVelocity=Vector3.MoveTowards(
+            knockbackVelocity,
+            Vector3.zero,
+            knockbackDeceleration*Time.deltaTime
+        );
+        if(knockbackTimeRemaining <= 0f)
+        {
+            knockbackVelocity=Vector3.zero;
+        }
+    }
+
+    private void Move()//WASD移動(移動にまつわる処理は最後にVelocityにまとめる)
     {
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
@@ -84,12 +132,15 @@ public class PlayerController : MonoBehaviour
         Vector3 velocity = moveDirection *moveSpeed;
 
         velocity.y = verticalVelocity;
+        //ノックバック処理用ベクトルを加える
+        velocity += knockbackVelocity;
         //移動と多段ジャンプの処理
         controller.Move(velocity *Time.deltaTime+status.jumpPower*Time.deltaTime);
 
         //jumpPowerを自然に収束させる
         status.jumpPower = Vector3.Lerp(status.jumpPower, Vector3.zero, 5f * Time.deltaTime);
-        
+        //ノックバックを収束させる
+        Updateknockback();        
     }
 
     public void Look()//カーソルによる視点変更
