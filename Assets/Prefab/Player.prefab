@@ -159,6 +159,7 @@ MonoBehaviour:
   moveSpeed: 5
   jumpPower: 7
   mouseSensitivity: 500
+  knockbackCoefficient: 0.01
 --- !u!54 &2337954661649208067
 Rigidbody:
   m_ObjectHideFlags: 0
