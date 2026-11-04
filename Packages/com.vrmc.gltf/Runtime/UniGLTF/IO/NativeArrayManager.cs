@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Unity.Collections;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace UniGLTF
 {
@@ -28,11 +29,11 @@ namespace UniGLTF
     /// <summary>
     /// 特定のコンテキスト(GltfDataなど)に関連する、NativeArrayの作成を代行し、
     /// まとめてDisposeできるようにする。
-    /// 
+    ///
     /// 例えば indexバッファー NativeArray<uint> の元が NativeArray<ushort> である場合に
     /// 新規に NativeArray を作成し Dispose 対象として管理する必要がある。
     /// また、Sparse や base64 encoding など単純なバイト列のスライスで済まない場合も同様である。
-    /// 
+    ///
     /// </summary>
     public class NativeArrayManager : INativeArrayManager, IDisposable
     {
@@ -68,28 +69,38 @@ namespace UniGLTF
 
         public NativeArray<T> CreateNativeArray<T>(ArraySegment<T> data) where T : struct
         {
-            var array = CreateNativeArray<T>(data.Count);
-#if UNITY_2022_2_OR_NEWER
-            var toSpan = array.AsSpan();
-            var fromSpan = data.AsSpan();
-            fromSpan.CopyTo(toSpan);
-#else
-            for (int i = 0; i < data.Count; i++)
-                array[i] = data.Array[data.Offset + i];
-#endif
-            return array;
+            return CreateNativeArray((ReadOnlyMemory<T>)data);
         }
 
         public NativeArray<T> CreateNativeArray<T>(T[] data) where T : struct
         {
-            var array = CreateNativeArray<T>(data.Length);
-            array.CopyFrom(data);
-            return array;
+            return CreateNativeArray((ReadOnlyMemory<T>)data);
+        }
+
+        /// <summary>
+        /// MemoryをゼロコピーでNativeArrayに変換する。元のデータのポインタはpinされ、Dispose時にunpinされる
+        /// </summary>
+        /// <param name="data"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public NativeArray<T> CreateNativeArray<T>(ReadOnlyMemory<T> data) where T : struct
+        {
+            unsafe
+            {
+                var handle = data.Pin();
+                var nativeArray = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(handle.Pointer, data.Length, Allocator.None);
+                m_disposables.Add(nativeArray);
+                m_disposables.Add(handle);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref nativeArray, AtomicSafetyHandle.Create());
+#endif
+              return nativeArray;
+            }
         }
 
         /// <summary>
         /// サイズの違う型にコピーする。
-        /// 
+        ///
         /// 例
         /// NativeArray<ushort> => NativeArray<uint>
         /// </summary>
