@@ -98,7 +98,7 @@ public class PlayerController : MonoBehaviour
             status.Turbo();
         }else
         {
-            moveSpeed=8f;
+            moveSpeed=3f;
         }
 
         forward.y=0f;

@@ -17,6 +17,8 @@ public class PlayerAttack : MonoBehaviour
     [SerializeField,Min(1)]private int debugVisibleFrames=5;
     [SerializeField] private Color debugColor=new Color(1f,0f,0f,0.25f);
     private int debugFramesRemaining;
+
+    [SerializeField]private VroidAnimationDriver animationDriver;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -30,6 +32,9 @@ public class PlayerAttack : MonoBehaviour
         {
             AttackTouchingEnemies();
             Debug.Log("攻撃が実行されました。");
+
+            //animationの追加
+            animationDriver.PlayAttackAnimation();
         }
 
         //デバッグ機能（Update内）
